@@ -127,6 +127,32 @@ We use [Wandb](https://wandb.ai/site) for the visualization of learning curves.
 If you want to disable it, please set `use_wandb` to `False` in the folder [`config/`](config/).
 Also, other configurations can be modified in the folder [`config/`](config/).
 
+### 5. PSM training
+
+To train the PSM model you must first pre-compute sentence features using `SentenceTransformer`:
+
+```bash
+python script/gen_text_features.py \
+    --data data/activitynet/train_data.json \
+    --output data/activitynet/train_sentence_features.npy
+```
+
+After generating features (do the same for Charades if needed), run training with the PSM configuration:
+
+```bash
+python train.py --config-path config/activitynet/config_psm.json
+```
+
+### Mining strategies
+
+**Negative Sample Mining**
+
+Negative sample mining has been widely studied in metric learning and temporal sentence grounding. Hard negatives help debias shortcuts and improve model generalization. Prior methods often treat remaining samples equally, while PSM divides them into similar and dissimilar subsets to provide more discriminative supervision.
+
+**Positive Inter-Sample Mining**
+
+Positive inter-sample mining explores positive relations between different training samples. Existing techniques mine similar images or videos for contextual constraints or as hard negatives. PSM is the first to mine positive inter-video samples for weakly supervised TSG and proves its effectiveness.
+
 ## Acknowledgement
 The following repositories were helpful for our implementation.
 

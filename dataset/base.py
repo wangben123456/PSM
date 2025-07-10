@@ -19,6 +19,12 @@ class BaseDataset(Dataset):
         for w, _ in vocab['counter'].most_common(args['vocab_size']):
             self.keep_vocab[w] = self.vocab_size
 
+        self.sim_feats = None
+        if 'sim_feat_path' in args and args['sim_feat_path']:
+            self.sim_feats = np.load(args['sim_feat_path'])
+            norm = np.linalg.norm(self.sim_feats, axis=1, keepdims=True) + 1e-8
+            self.sim_feats = self.sim_feats / norm
+
     def _load_frame_features(self, vid):
         raise NotImplementedError
 
@@ -70,26 +76,49 @@ class BaseDataset(Dataset):
         words_feat = [self.vocab['id2vec'][self.vocab['w2id'][words[0]]].astype(np.float32)] # placeholder for the start token
         words_feat.extend([self.vocab['id2vec'][self.vocab['w2id'][w]].astype(np.float32) for w in words])
         frames_feat = self._sample_frame_features(self._load_frame_features(vid))
-        
+
         return {
             'frames_feat': frames_feat,
             'words_feat': words_feat,
             'words_id': words_id,
             'weights': weights,
-            'raw': [vid, duration, timestamps, sentence]
+            'raw': [vid, duration, timestamps, sentence],
+            'index': index
         }
 
     def get_samples(self, num_samples):
         samples = []
         for i in range(num_samples):
-            # randomly select sample index
-            # idx = np.random.randint(0, len(self)-1)
-            idx = i
+            idx = np.random.randint(0, len(self))
             sample = self.__getitem__(idx)
             samples.append(sample)
 
         return samples
         #return self.collate_fn(samples)
+
+    def get_similar_indices(self, index, top_k=5, positive=True):
+        if self.sim_feats is None:
+            raise ValueError('similarity features not loaded')
+        feat = self.sim_feats[index]
+        sims = np.dot(self.sim_feats, feat)
+        order = sims.argsort()
+        if positive:
+            order = order[::-1]
+            order = order[1:top_k+1]
+        else:
+            order = order[:top_k]
+        return order
+
+    def sample_similar(self, index, top_k=5, positive=True):
+        idxs = self.get_similar_indices(index, top_k=top_k, positive=positive)
+        choice = np.random.choice(idxs)
+        return self.__getitem__(int(choice))
+
+    def sample_hard_negative(self, index, top_k=5):
+        """Sample a dissimilar instance to serve as hard negative."""
+        idxs = self.get_similar_indices(index, top_k=top_k, positive=False)
+        choice = np.random.choice(idxs)
+        return self.__getitem__(int(choice))
 
 
 def build_collate_data(max_num_segments, max_num_words, frame_dim, word_dim):
@@ -97,6 +126,7 @@ def build_collate_data(max_num_segments, max_num_words, frame_dim, word_dim):
         bsz = len(samples)
         batch = {
             'raw': [sample['raw'] for sample in samples],
+            'index': [sample['index'] for sample in samples]
         }
 
         frames_len = []

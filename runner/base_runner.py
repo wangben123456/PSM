@@ -5,7 +5,7 @@ import os
 import numpy as np
 import torch
 
-from model.loss import cal_nll_loss, main_loss_fn, sub_loss_fn
+from model.loss import cal_nll_loss, main_loss_fn, sub_loss_fn, psm_loss
 from util.utils import TimeMeter, AverageMeter, Accumulator
 
 import random
@@ -116,15 +116,23 @@ class Runner:
             self.optimizer.zero_grad()
             net_input = move_to_cuda(batch['net_input'])
             output = self.model(epoch=epoch, **net_input)
-
             # compute loss
-            # main losses (reconstruction loss)
-            loss, loss_dict = main_loss_fn(**output, num_props=self.model.module.num_props, mask_list=self.model.module.pos_mask_list, **self.args['loss'])
+            if self.args['model']['name'] == 'PSM':
+                pos_samples = [self.train_set.sample_similar(int(i), positive=True) for i in batch['index']]
+                neg_samples = [self.train_set.sample_similar(int(i), positive=False) for i in batch['index']]
+                pos_batch = self.train_set.collate_data(pos_samples)
+                neg_batch = self.train_set.collate_data(neg_samples)
+                pos_out = self.model(**move_to_cuda(pos_batch['net_input']))
+                neg_out = self.model(**move_to_cuda(neg_batch['net_input']))
+                loss, loss_dict = psm_loss(output['query_repr'], pos_out['query_repr'], neg_out['query_repr'], margin=self.args['loss']['psm_margin'], temperature=self.args['loss']['psm_tau'])
+            else:
+                # main losses (reconstruction loss)
+                loss, loss_dict = main_loss_fn(**output, num_props=self.model.module.num_props, mask_list=self.model.module.pos_mask_list, **self.args['loss'])
 
-            # sub losses (pushing loss, pulling loss, intra-video contrastive loss)
-            sub_loss, sub_loss_dict = sub_loss_fn(**output, num_props=self.model.module.num_props, mask_list=self.model.module.pos_mask_list, **self.args['loss'])
-            loss_dict.update(sub_loss_dict)
-            loss = loss + sub_loss
+                # sub losses (pushing loss, pulling loss, intra-video contrastive loss)
+                sub_loss, sub_loss_dict = sub_loss_fn(**output, num_props=self.model.module.num_props, mask_list=self.model.module.pos_mask_list, **self.args['loss'])
+                loss_dict.update(sub_loss_dict)
+                loss = loss + sub_loss
 
             # backward
             loss.backward()
@@ -149,6 +157,8 @@ class Runner:
 
     def eval(self, save=None, epoch=0):
         # evaluate
+        if self.args['model']['name'] == 'PSM':
+            return {}
         self.model.eval()
         with torch.no_grad():
             metrics_logger = collections.defaultdict(lambda: AverageMeter())

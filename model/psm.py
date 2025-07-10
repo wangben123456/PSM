@@ -46,4 +46,3 @@ class PSM(nn.Module):
 def _generate_mask(x, x_len):
     mask = []
     for l in x_len:
-

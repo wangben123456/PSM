@@ -119,7 +119,7 @@ class Runner:
             # compute loss
             if self.args['model']['name'] == 'PSM':
                 pos_samples = [self.train_set.sample_similar(int(i), positive=True) for i in batch['index']]
-                neg_samples = [self.train_set.sample_hard_negative(int(i)) for i in batch['index']]
+
                 pos_batch = self.train_set.collate_data(pos_samples)
                 neg_batch = self.train_set.collate_data(neg_samples)
                 pos_out = self.model(**move_to_cuda(pos_batch['net_input']))

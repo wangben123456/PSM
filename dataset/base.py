@@ -20,13 +20,6 @@ class BaseDataset(Dataset):
             self.keep_vocab[w] = self.vocab_size
 
         self.sim_feats = None
-        self.sim_indices = None
-        if 'sim_feat_path' in args and args['sim_feat_path']:
-            self.sim_feats = np.load(args['sim_feat_path'])
-            norm = np.linalg.norm(self.sim_feats, axis=1, keepdims=True) + 1e-8
-            self.sim_feats = self.sim_feats / norm
-        if 'sim_indices_path' in args and args['sim_indices_path']:
-            self.sim_indices = np.load(args['sim_indices_path'])
 
     def _load_frame_features(self, vid):
         raise NotImplementedError
@@ -100,20 +93,6 @@ class BaseDataset(Dataset):
         #return self.collate_fn(samples)
 
     def get_similar_indices(self, index, top_k=5, positive=True):
-        if self.sim_indices is not None:
-            if positive:
-                idxs = self.sim_indices[index][:top_k]
-            else:
-                all_idx = np.arange(len(self))
-                pos = set(self.sim_indices[index])
-                pos.add(index)
-                idxs = np.setdiff1d(all_idx, list(pos))
-                if top_k is not None and len(idxs) > top_k:
-                    idxs = np.random.choice(idxs, top_k, replace=False)
-            return idxs
-
-        if self.sim_feats is None:
-            raise ValueError('similarity features not loaded')
 
         feat = self.sim_feats[index]
         sims = np.dot(self.sim_feats, feat)
@@ -130,11 +109,7 @@ class BaseDataset(Dataset):
         choice = np.random.choice(idxs)
         return self.__getitem__(int(choice))
 
-    def sample_hard_negative(self, index, top_k=5):
-        """Sample a dissimilar instance to serve as hard negative."""
-        idxs = self.get_similar_indices(index, top_k=top_k, positive=False)
-        choice = np.random.choice(idxs)
-        return self.__getitem__(int(choice))
+
 
 
 def build_collate_data(max_num_segments, max_num_words, frame_dim, word_dim):

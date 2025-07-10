@@ -89,9 +89,7 @@ class BaseDataset(Dataset):
     def get_samples(self, num_samples):
         samples = []
         for i in range(num_samples):
-            # randomly select sample index
-            # idx = np.random.randint(0, len(self)-1)
-            idx = i
+            idx = np.random.randint(0, len(self))
             sample = self.__getitem__(idx)
             samples.append(sample)
 
@@ -113,6 +111,11 @@ class BaseDataset(Dataset):
 
     def sample_similar(self, index, top_k=5, positive=True):
         idxs = self.get_similar_indices(index, top_k=top_k, positive=positive)
+        choice = np.random.choice(idxs)
+        return self.__getitem__(int(choice))
+
+    def sample_hard_negative(self, index, top_k=5):
+        idxs = self.get_similar_indices(index, top_k=top_k, positive=True)
         choice = np.random.choice(idxs)
         return self.__getitem__(int(choice))
 

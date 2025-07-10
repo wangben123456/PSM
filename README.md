@@ -143,6 +143,16 @@ After generating features (do the same for Charades if needed), run training wit
 python train.py --config-path config/activitynet/config_psm.json
 ```
 
+### Mining strategies
+
+**Negative Sample Mining**
+
+Negative sample mining has been widely studied in metric learning and temporal sentence grounding. Hard negatives help debias shortcuts and improve model generalization. Prior methods often treat remaining samples equally, while PSM divides them into similar and dissimilar subsets to provide more discriminative supervision.
+
+**Positive Inter-Sample Mining**
+
+Positive inter-sample mining explores positive relations between different training samples. Existing techniques mine similar images or videos for contextual constraints or as hard negatives. PSM is the first to mine positive inter-video samples for weakly supervised TSG and proves its effectiveness.
+
 ## Acknowledgement
 The following repositories were helpful for our implementation.
 

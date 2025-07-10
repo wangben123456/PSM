@@ -127,6 +127,22 @@ We use [Wandb](https://wandb.ai/site) for the visualization of learning curves.
 If you want to disable it, please set `use_wandb` to `False` in the folder [`config/`](config/).
 Also, other configurations can be modified in the folder [`config/`](config/).
 
+### 5. PSM training
+
+To train the PSM model you must first pre-compute sentence features using `SentenceTransformer`:
+
+```bash
+python script/gen_text_features.py \
+    --data data/activitynet/train_data.json \
+    --output data/activitynet/train_sentence_features.npy
+```
+
+After generating features (do the same for Charades if needed), run training with the PSM configuration:
+
+```bash
+python train.py --config-path config/activitynet/config_psm.json
+```
+
 ## Acknowledgement
 The following repositories were helpful for our implementation.
 

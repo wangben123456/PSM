@@ -115,6 +115,7 @@ class BaseDataset(Dataset):
         return self.__getitem__(int(choice))
 
 
+
 def build_collate_data(max_num_segments, max_num_words, frame_dim, word_dim):
     def collate_data(samples):
         bsz = len(samples)

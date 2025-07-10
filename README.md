@@ -143,6 +143,7 @@ After generating features (do the same for Charades if needed), run training wit
 python train.py --config-path config/activitynet/config_psm.json
 ```
 
+
 ## Acknowledgement
 The following repositories were helpful for our implementation.
 

@@ -1,0 +1,48 @@
+{
+  "exp_name": "exp-activitynet-psm",
+  "dataset": {
+    "name": "ActivityNet",
+    "feature_path": "data/activitynet/sub_activitynet_v1-3.c3d.hdf5",
+    "train_data": "data/activitynet/train_data.json",
+    "test_data": "data/activitynet/test_data.json",
+    "vocab_path": "data/activitynet/glove.pkl",
+    "vocab_size": 8000,
+    "max_num_words": 20,
+    "max_num_segments": 200,
+    "sim_feat_path": "data/activitynet/train_sentence_features.npy",
+    "sim_indices_path": "data/activitynet/sim_indices.npy"
+  },
+  "train": {
+    "wandb_path": "./",
+    "log_path": "./log",
+    "save_path": "./checkpoints/activitynet/",
+    "batch_size": 32,
+    "num_epochs": 30,
+    "use_wandb": true,
+    "save_model": true,
+    "optimizer": {
+      "lr": 4e-4,
+      "weight_decay": 0,
+      "warmup_updates": 400,
+      "warmup_init_lr": 1e-7
+    }
+  },
+  "model": {
+    "name": "PSM",
+    "frame_feat_dim": 500,
+    "word_feat_dim": 300,
+    "hidden_dim": 256,
+    "dropout": 0.1,
+    "DualTransformer": {
+      "d_model": 256,
+      "num_heads": 4,
+      "num_decoder_layers1": 2,
+      "num_decoder_layers2": 2,
+      "dropout": 0.1
+    }
+  },
+  "loss": {
+    "psm_margin": 0.2,
+    "psm_tau": 0.07
+  }
+}

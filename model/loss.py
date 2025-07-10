@@ -195,3 +195,13 @@ def sub_loss_fn(words_logits, words_id, words_mask, num_props, mask_list, neg_wo
             'push_loss': push_losses.mean().item() if torch.is_tensor(push_losses) else 0.0,
             'pull_loss': pull_losses.mean().item() if torch.is_tensor(pull_losses) else 0.0,
         }
+
+
+def psm_loss(anchor, pos, neg, margin=0.2, temperature=0.07):
+    sim_pos = F.cosine_similarity(anchor, pos)
+    sim_neg = F.cosine_similarity(anchor, neg)
+    logits = torch.stack([sim_pos, sim_neg], dim=1) / temperature
+    labels = torch.zeros(anchor.size(0), dtype=torch.long, device=anchor.device)
+    contrast = F.cross_entropy(logits, labels)
+    rank = F.relu(margin - sim_pos + sim_neg).mean()
+    return contrast + rank, {'contrast_loss': contrast.item(), 'rank_loss': rank.item()}

@@ -127,6 +127,56 @@ We use [Wandb](https://wandb.ai/site) for the visualization of learning curves.
 If you want to disable it, please set `use_wandb` to `False` in the folder [`config/`](config/).
 Also, other configurations can be modified in the folder [`config/`](config/).
 
+### 5. PSM training
+
+To train the PSM model you must first pre-compute sentence features using `SentenceTransformer`:
+
+```bash
+python script/gen_text_features.py \
+    --data data/activitynet/train_data.json \
+    --output data/activitynet/train_sentence_features.npy
+
+# optionally also generate top-k similar indices
+python script/gen_sim_indices.py \
+    --data data/activitynet/train_data.json \
+    --output data/activitynet/sim_indices.npy \
+    --feat-output data/activitynet/train_sentence_features.npy
+```
+
+After generating features and indices (do the same for Charades if needed), run training with the PSM configuration:
+
+```bash
+python train.py --config-path config/activitynet/config_psm.json
+```
+
+### Mining strategies
+
+**Negative Sample Mining**
+
+Negative sample mining has been widely studied in metric learning and temporal sentence grounding. Hard negatives help debias shortcuts and improve model generalization. Prior methods often treat remaining samples equally, while PSM divides them into similar and dissimilar subsets to provide more discriminative supervision.
+
+**Positive Inter-Sample Mining**
+
+Positive inter-sample mining explores positive relations between different training samples. Existing techniques mine similar images or videos for contextual constraints or as hard negatives. PSM is the first to mine positive inter-video samples for weakly supervised TSG and proves its effectiveness.
+
+## Experimental Setup
+
+We evaluate PSM on two tasks: weakly supervised temporal sentence grounding (WSTSG) and grounded VideoQA.
+
+### Datasets
+
+- **Charades-STA** [10]: 5.3k/1.3k videos for training/testing and 10.6k/3.2k pairs. Average video length is 30s.
+- **ActivityNet Captions** [67]: 10k/4.9k/5k videos with 37k/17.5k/17k pairs. Average length is 118s. Following prior work, we use `val2` for testing.
+- **NExT-GQA** [68]: 3.9k/0.6k/1.0k videos with 34.1k/3.4k/5.5k QA pairs. Each QA in validation/test has an answer interval. We report results on the test split.
+
+### Evaluation Metrics
+
+For WSTSG, we report `R@n,IoU=m` and `R@n,mIoU` as in [10]. For grounded VideoQA we follow [68] and measure mIoU, mIoP, `Acc@GQA`, and `Acc@QA`.
+
+### Implementation Details
+
+For WSTSG, PSM builds on PPS. We use C3D features on ActivityNet and I3D features on Charades. The maximum number of segments is 200 and the maximum query length is 20. Transformers have three layers with four heads and hidden dimension 256. We train with Adam at learning rate `4e-4`, batch size `32`, and select the top 20 similar samples for each anchor. Hyperparameters are set to `γ1=γ2=γ3=γ4=0.5` and `γ5=γ6=0.15`. For VideoQA we adopt the NG baseline with the same margins.
+
 ## Acknowledgement
 The following repositories were helpful for our implementation.
 

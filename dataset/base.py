@@ -114,11 +114,6 @@ class BaseDataset(Dataset):
         choice = np.random.choice(idxs)
         return self.__getitem__(int(choice))
 
-    def sample_hard_negative(self, index, top_k=5):
-        """Sample a dissimilar instance to serve as hard negative."""
-        idxs = self.get_similar_indices(index, top_k=top_k, positive=False)
-        choice = np.random.choice(idxs)
-        return self.__getitem__(int(choice))
 
 
 def build_collate_data(max_num_segments, max_num_words, frame_dim, word_dim):

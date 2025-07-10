@@ -9,7 +9,6 @@
     "vocab_size": 1111,
     "max_num_words": 20,
     "max_num_segments": 200,
-    "sim_feat_path": "data/charades/train_sentence_features.npy"
   },
   "train": {
     "wandb_path": "./",

@@ -20,10 +20,6 @@ class BaseDataset(Dataset):
             self.keep_vocab[w] = self.vocab_size
 
         self.sim_feats = None
-        if 'sim_feat_path' in args and args['sim_feat_path']:
-            self.sim_feats = np.load(args['sim_feat_path'])
-            norm = np.linalg.norm(self.sim_feats, axis=1, keepdims=True) + 1e-8
-            self.sim_feats = self.sim_feats / norm
 
     def _load_frame_features(self, vid):
         raise NotImplementedError
@@ -97,8 +93,7 @@ class BaseDataset(Dataset):
         #return self.collate_fn(samples)
 
     def get_similar_indices(self, index, top_k=5, positive=True):
-        if self.sim_feats is None:
-            raise ValueError('similarity features not loaded')
+
         feat = self.sim_feats[index]
         sims = np.dot(self.sim_feats, feat)
         order = sims.argsort()
@@ -113,6 +108,7 @@ class BaseDataset(Dataset):
         idxs = self.get_similar_indices(index, top_k=top_k, positive=positive)
         choice = np.random.choice(idxs)
         return self.__getitem__(int(choice))
+
 
 
 

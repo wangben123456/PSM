@@ -9,7 +9,7 @@
     "vocab_size": 8000,
     "max_num_words": 20,
     "max_num_segments": 200,
-    "sim_feat_path": "data/activitynet/train_sentence_features.npy"
+
   },
   "train": {
     "wandb_path": "./",

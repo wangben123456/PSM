@@ -89,9 +89,7 @@ class BaseDataset(Dataset):
     def get_samples(self, num_samples):
         samples = []
         for i in range(num_samples):
-            # randomly select sample index
-            # idx = np.random.randint(0, len(self)-1)
-            idx = i
+            idx = np.random.randint(0, len(self))
             sample = self.__getitem__(idx)
             samples.append(sample)
 

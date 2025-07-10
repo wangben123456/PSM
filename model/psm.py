@@ -46,7 +46,3 @@ class PSM(nn.Module):
 def _generate_mask(x, x_len):
     mask = []
     for l in x_len:
-        mask.append(torch.zeros([x.size(1)]).byte().cuda())
-        mask[-1][:l] = 1
-    mask = torch.stack(mask, 0)
-    return mask
